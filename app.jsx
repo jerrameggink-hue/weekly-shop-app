@@ -1,4 +1,4 @@
-```react
+
 import React, { useState } from 'react';
 import { 
   ShoppingBag, 
@@ -423,4 +423,3 @@ export default function App() {
     </div>
   );
 }
-```
