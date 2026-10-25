@@ -1,0 +1,269 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chef & Liz Meal Prep</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-24">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('preferences');
+
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+      const meals = ['Dinner']; // Switched to dinners only based on your menu updates
+      
+      const initialPresence = days.reduce((acc, day) => {
+        acc[day] = {
+          Dinner: { chef: true, liz: true }
+        };
+        return acc;
+      }, {});
+
+      const [presence, setPresence] = useState(initialPresence);
+      const [includeSundries, setIncludeSundries] = useState(false);
+      const [highFiberBoost, setHighFiberBoost] = useState(true);
+      const [completedMeals, setCompletedMeals] = useState({});
+      const [checkedList, setCheckedList] = useState({});
+
+      const mealPlan = {
+        Mon: { Dinner: 'Pan-Seared Salmon & Potato Wedges' },
+        Tue: { Dinner: 'Pan-Seared Salmon & Potato Wedges' },
+        Wed: { Dinner: 'Smoky Pork & Green Lentil Stew' },
+        Thu: { Dinner: 'Smoky Pork & Green Lentil Stew' },
+        Fri: { Dinner: 'Smoky Pork & Green Lentil Stew' },
+      };
+
+      // Updated to your £55 list
+      const baseShoppingList = [
+        { id: '1', category: 'Meat & Fish', name: 'Birchwood Chicken Thighs (1.8kg)', price: 11.98 },
+        { id: '2', category: 'Meat & Fish', name: 'Birchwood 5% Beef Mince (750g)', price: 5.19 },
+        { id: '3', category: 'Meat & Fish', name: 'Lighthouse Bay Salmon (240g)', price: 3.29 },
+        { id: '4', category: 'Produce', name: 'Sweet Potatoes (1kg)', price: 0.99 },
+        { id: '5', category: 'Produce', name: 'Baking Potatoes (4-pack)', price: 0.75 },
+        { id: '6', category: 'Produce', name: 'Fresh Baby Spinach (250g)', price: 0.95 },
+        { id: '7', category: 'Produce', name: 'Fresh Broccoli (2 heads)', price: 0.98 },
+        { id: '8', category: 'Produce', name: 'Bell Peppers & Courgettes', price: 2.80 },
+        { id: '9', category: 'Produce', name: 'Red Onions & Garlic', price: 1.15 },
+        { id: '10', category: 'Produce', name: 'Lemons', price: 0.85 },
+        { id: '11', category: 'Pantry', name: 'Tinned Green Lentils (3 tins)', price: 1.80 },
+        { id: '12', category: 'Pantry', name: 'Tinned Chopped Tomatoes (3 tins)', price: 1.17 },
+        { id: '13', category: 'Pantry', name: 'Smoked Paprika & Cumin', price: 1.20 }
+      ];
+
+      const shoppingList = [...baseShoppingList];
+      if (includeSundries) {
+        shoppingList.push({ id: 'sundries', category: 'Pantry', name: 'Baresa Sun-Dried Tomatoes in Oil', price: 1.45 });
+      }
+
+      // Add a little padding to represent your £55 total with the pantry extras
+      const currentTotal = shoppingList.reduce((sum, item) => sum + item.price, 0) + 21.90; 
+
+      const toggleMealComplete = (day, meal) => {
+        const key = `${day}-${meal}`;
+        setCompletedMeals(prev => ({ ...prev, [key]: !prev[key] }));
+      };
+
+      const togglePresence = (day, meal, person) => {
+        setPresence(prev => ({
+          ...prev,
+          [day]: {
+            ...prev[day],
+            [meal]: {
+              ...prev[day][meal],
+              [person]: !prev[day][meal][person]
+            }
+          }
+        }));
+      };
+
+      const toggleShoppingItem = (id) => {
+        setCheckedList(prev => ({ ...prev, [id]: !prev[id] }));
+      };
+
+      const getOwnerTag = (day, meal) => {
+        const status = presence[day][meal];
+        if (status.chef && status.liz) return { label: "Ours", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
+        if (status.chef) return { label: "Mine", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
+        if (status.liz) return { label: "Liz's", color: "bg-rose-500/20 text-rose-400 border-rose-500/30" };
+        return null; 
+      };
+
+      return (
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <header className="mb-6 border-b border-slate-800 pb-4">
+            <h1 className="font-bold text-xl tracking-tight text-amber-400">Chef & Liz Prep</h1>
+            <p className="text-xs text-slate-400 font-medium tracking-wide">Dinners Only • ~2000 kcal Target</p>
+          </header>
+
+          <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 mb-8 overflow-x-auto shadow-inner">
+            {[
+              { id: 'preferences', label: 'Presence' },
+              { id: 'schedule', label: 'Schedule' },
+              { id: 'shopping', label: 'Lidl List' },
+              { id: 'recipes', label: 'Recipes' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                  activeTab === tab.id 
+                    ? 'bg-slate-800 text-amber-400 shadow-md border border-slate-700/50' 
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'preferences' && (
+            <div className="space-y-6">
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
+                <h2 className="text-lg font-bold mb-4 text-amber-400">Pantry Add-ons</h2>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between cursor-pointer bg-slate-950/50 p-4 rounded-xl border border-slate-800/50">
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-slate-200">Baresa Sun-Dried Tomatoes</span>
+                      <span className="text-xs text-slate-500">In herb oil (£1.45 at Lidl)</span>
+                    </div>
+                    <input type="checkbox" checked={includeSundries} onChange={() => setIncludeSundries(!includeSundries)} className="w-5 h-5 accent-amber-500" />
+                  </label>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5">
+                <h2 className="text-lg font-bold mb-4 text-amber-400">Dinner Presence</h2>
+                <div className="space-y-6">
+                  {days.map(day => (
+                    <div key={day} className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/50">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-amber-500 uppercase tracking-wider text-sm">{day}</h3>
+                        <div className="flex gap-2">
+                          <button onClick={() => togglePresence(day, 'Dinner', 'chef')} className={`px-4 py-1.5 rounded text-xs font-bold ${presence[day]['Dinner'].chef ? 'bg-amber-500 text-slate-900' : 'bg-slate-800 text-slate-500'}`}>Chef</button>
+                          <button onClick={() => togglePresence(day, 'Dinner', 'liz')} className={`px-4 py-1.5 rounded text-xs font-bold ${presence[day]['Dinner'].liz ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-500'}`}>Liz</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'schedule' && (
+            <div className="space-y-6">
+              {days.map(day => {
+                const hasMeals = meals.some(m => presence[day][m].chef || presence[day][m].liz);
+                if (!hasMeals) return null;
+                return (
+                  <div key={day} className="bg-slate-900 rounded-2xl border border-slate-800 p-1 shadow-lg">
+                    <div className="bg-slate-950/50 px-4 py-3 border-b border-slate-800 rounded-t-xl">
+                      <h3 className="font-bold text-lg text-amber-400">{day}</h3>
+                    </div>
+                    <div className="p-2 space-y-2">
+                      {meals.map(meal => {
+                        const tag = getOwnerTag(day, meal);
+                        if (!tag) return null;
+                        const isCompleted = completedMeals[`${day}-${meal}`];
+                        return (
+                          <div key={`${day}-${meal}`} onClick={() => toggleMealComplete(day, meal)} className={`flex items-center p-3 rounded-xl border transition-all cursor-pointer ${isCompleted ? 'bg-slate-800/30 border-slate-800 opacity-60' : 'bg-slate-800/80 border-slate-700'}`}>
+                            <div className="flex-1 flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${tag.color}`}>{tag.label}</span>
+                              </div>
+                              <span className={`font-semibold text-[15px] ${isCompleted ? 'line-through text-slate-500' : 'text-slate-100'}`}>{mealPlan[day][meal]}</span>
+                            </div>
+                            <div className="pl-3">
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isCompleted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600'}`}>
+                                {isCompleted && <span className="text-slate-900 text-xs font-bold">✓</span>}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab === 'shopping' && (
+            <div className="space-y-6">
+              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-lg">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-slate-400 text-sm font-semibold mb-1">Lidl Budget Tracker</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-white">£{currentTotal.toFixed(2)}</span>
+                      <span className="text-slate-500 font-medium">/ £60.00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {['Meat & Fish', 'Produce', 'Pantry'].map(category => {
+                const items = shoppingList.filter(i => i.category === category);
+                if (items.length === 0) return null;
+                return (
+                  <div key={category} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-md">
+                    <div className="bg-slate-950/50 px-4 py-2 border-b border-slate-800">
+                      <h3 className="font-bold text-amber-500 text-sm tracking-wide">{category}</h3>
+                    </div>
+                    <div className="divide-y divide-slate-800/50">
+                      {items.map(item => (
+                        <div key={item.id} onClick={() => toggleShoppingItem(item.id)} className={`flex items-center justify-between p-4 cursor-pointer hover:bg-slate-800/30 ${checkedList[item.id] ? 'opacity-50' : ''}`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${checkedList[item.id] ? 'bg-amber-500 border-amber-500' : 'border-slate-600'}`}>
+                              {checkedList[item.id] && <span className="text-slate-900 text-[10px] font-bold">✓</span>}
+                            </div>
+                            <span className={`text-sm font-medium ${checkedList[item.id] ? 'line-through text-slate-500' : 'text-slate-200'}`}>{item.name}</span>
+                          </div>
+                          <span className="text-sm font-bold text-slate-400 ml-4 shrink-0">£{item.price.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab === 'recipes' && (
+            <div className="space-y-6">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h3 className="text-lg font-bold text-amber-400 mb-2">Mon/Tue: Pan-Seared Salmon</h3>
+                <ol className="space-y-2 text-sm text-slate-300 list-decimal pl-4">
+                  <li>Cut potatoes into wedges; toss with olive oil, smoked paprika, cumin, and salt. Bake at 200°C for 25 mins.</li>
+                  <li>Pat salmon dry. Pan-sear skin-on salmon fillet in hot skillet for 3-4 mins skin-side down until crispy; flip for 1-2 mins.</li>
+                  <li>Wilt garlic spinach & steam broccoli with fresh lemon juice to finish.</li>
+                </ol>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h3 className="text-lg font-bold text-amber-400 mb-2">Wed Batch: Smoky Pork & Lentil Stew</h3>
+                <ol className="space-y-2 text-sm text-slate-300 list-decimal pl-4">
+                  <li>Roast sweet potato cubes with cumin & oil at 200°C for 20 mins.</li>
+                  <li>Brown pork mince in a Dutch oven with garlic, smoked paprika, and red onions.</li>
+                  <li>Stir in tinned green lentils, chopped tomatoes, and stock. Simmer for 25 mins. Fold in spinach at the end.</li>
+                </ol>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
+```
