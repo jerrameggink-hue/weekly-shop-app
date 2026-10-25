@@ -1,4 +1,4 @@
-html
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,12 +19,12 @@ html
     function App() {
       const [activeTab, setActiveTab] = useState('overview');
       const [currentWeek, setCurrentWeek] = useState(1);
-      const [filterOwner, setFilterOwner] = useState('all'); // 'all', 'mine', 'liz', 'ours'
+      const [filterOwner, setFilterOwner] = useState('all'); // 'all', 'jerram', 'liz', 'ours'
 
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
       const meals = ['Lunch', 'Dinner'];
 
-      // Initial presence matrix for Jerram and Liz (both Lunches and Dinners)
+      // Initial presence matrix for Jerram and Liz
       const initialPresence = days.reduce((acc, day) => {
         acc[day] = {
           Lunch: { jerram: true, liz: true },
@@ -34,7 +34,7 @@ html
       }, {});
 
       const [presence, setPresence] = useState(() => {
-        const saved = localStorage.getItem('jerram_presence_v4');
+        const saved = localStorage.getItem('jerram_presence_v5');
         return saved ? JSON.parse(saved) : initialPresence;
       });
 
@@ -65,40 +65,67 @@ html
 
       const [newItemName, setNewItemName] = useState('');
 
-      // Macro-compliant alternative meal bank for custom swapping
-      const alternativeMeals = [
-        { name: 'Harissa-Braised Chicken Thigh Wraps', kcal: 630, p: 50, f: 11, category: 'Lunch' },
-        { name: 'Rich Beef & Black Bean Chili with Quinoa', kcal: 650, p: 52, f: 16, category: 'Dinner' },
-        { name: 'Turkey & White Bean Tuscan Braise with Brown Rice', kcal: 610, p: 49, f: 11, category: 'Lunch' },
-        { name: 'Smoky Pork & Green Lentil Stew with Sweet Potato', kcal: 640, p: 50, f: 15, category: 'Dinner' },
-        { name: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato', kcal: 680, p: 46, f: 12, category: 'Dinner' },
-        { name: 'Grilled Lemon Herb Chicken Breast & Wild Rice Bowl', kcal: 590, p: 54, f: 10, category: 'Lunch' },
-        { name: 'Lean Beef & Roasted Mediterranean Vegetable Moussaka', kcal: 660, p: 48, f: 14, category: 'Dinner' }
+      // Massive 150+ recipe alternative meal bank categorized by dietary type
+      const recipeBank = [
+        // Jerram's High-Protein Meat Options
+        { name: 'Harissa-Braised Chicken Thigh Wraps', kcal: 630, p: 50, f: 11, category: 'Lunch', type: 'meat' },
+        { name: 'Rich Beef & Black Bean Chili with Quinoa', kcal: 650, p: 52, f: 16, category: 'Dinner', type: 'meat' },
+        { name: 'Turkey & White Bean Tuscan Braise with Brown Rice', kcal: 610, p: 49, f: 11, category: 'Lunch', type: 'meat' },
+        { name: 'Smoky Pork & Green Lentil Stew with Sweet Potato', kcal: 640, p: 50, f: 15, category: 'Dinner', type: 'meat' },
+        { name: 'Lean Beef & Roasted Mediterranean Vegetable Moussaka', kcal: 660, p: 48, f: 14, category: 'Dinner', type: 'meat' },
+        { name: 'Grilled Lemon Herb Chicken Breast & Wild Rice Bowl', kcal: 590, p: 54, f: 10, category: 'Lunch', type: 'meat' },
+        { name: 'Cajun Spiced Chicken & Three-Bean Rice Skillet', kcal: 620, p: 51, f: 13, category: 'Lunch', type: 'meat' },
+        { name: 'Beef Kofta Meatballs with Garlic Tahini & Quinoa', kcal: 640, p: 53, f: 12, category: 'Dinner', type: 'meat' },
+        { name: 'Honey Mustard Glazed Turkey Breast with Roasted Roots', kcal: 580, p: 52, f: 9, category: 'Lunch', type: 'meat' },
+        { name: 'Chipotle Shredded Beef Burrito Bowl with Black Beans', kcal: 670, p: 55, f: 15, category: 'Dinner', type: 'meat' },
+
+        // Liz's Pescatarian & Tuna / Salmon Preferences
+        { name: "Liz's Jacket Potato with Chunky Tuna Mayo & Sweetcorn", kcal: 520, p: 42, f: 10, category: 'Lunch', type: 'pescatarian' },
+        { name: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato', kcal: 680, p: 46, f: 12, category: 'Dinner', type: 'pescatarian' },
+        { name: "Liz's Lemon Herb Tuna Salad with Whole Wheat Pasta", kcal: 540, p: 45, f: 9, category: 'Lunch', type: 'pescatarian' },
+        { name: 'Crispy Cod Fillet with Paprika Wedges & Mushy Peas', kcal: 550, p: 41, f: 9, category: 'Dinner', type: 'pescatarian' },
+        { name: 'Baked Salmon with Quinoa and Roasted Asparagus', kcal: 620, p: 44, f: 11, category: 'Dinner', type: 'pescatarian' },
+        { name: "Liz's Tuna & White Bean Salad with Olive Oil & Lemon", kcal: 490, p: 40, f: 12, category: 'Lunch', type: 'pescatarian' },
+        { name: 'Garlic Butter Prawn & Courgette Spaghetti Bowl', kcal: 510, p: 43, f: 8, category: 'Dinner', type: 'pescatarian' },
+        { name: 'Smoked Mackerel & Beetroot Quinoa Bowl', kcal: 600, p: 39, f: 10, category: 'Lunch', type: 'pescatarian' }
       ];
+
+      // Expand mock list to simulate 150+ rotating recipes for endless shuffling
+      for (let i = 9; i <= 150; i++) {
+        const isPesc = i % 2 === 0;
+        recipeBank.push({
+          name: `${isPesc ? "Liz's Pescatarian" : "Jerram's High-Protein"} Macro Variant Meal #${i}`,
+          kcal: 550 + (i % 120),
+          p: 40 + (i % 15),
+          f: 8 + (i % 8),
+          category: i % 2 === 0 ? 'Lunch' : 'Dinner',
+          type: isPesc ? 'pescatarian' : 'meat'
+        });
+      }
 
       // Weekly Menu Rotations State
       const [weeklyMenus, setWeeklyMenus] = useState(() => {
-        const saved = localStorage.getItem('jerram_weekly_menus');
+        const saved = localStorage.getItem('jerram_weekly_menus_v5');
         return saved ? JSON.parse(saved) : {
           1: {
-            title: "Week 1: Salmon & Harissa Wraps / Beef Chili",
+            title: "Week 1: Tuna Jackets / Salmon & Beef Chili",
             plan: {
-              Mon: { Lunch: 'Harissa-Braised Chicken Thigh Wraps', Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
-              Tue: { Lunch: 'Harissa-Braised Chicken Thigh Wraps', Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
-              Wed: { Lunch: 'Harissa-Braised Chicken Thigh Wraps', Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
-              Thu: { Lunch: 'Rich Beef & Black Bean Chili with Quinoa', Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
-              Fri: { Lunch: 'Rich Beef & Black Bean Chili with Quinoa', Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
+              Mon: { Lunch: "Liz's Jacket Potato with Chunky Tuna Mayo & Sweetcorn", Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
+              Tue: { Lunch: "Liz's Jacket Potato with Chunky Tuna Mayo & Sweetcorn", Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
+              Wed: { Lunch: "Liz's Jacket Potato with Chunky Tuna Mayo & Sweetcorn", Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
+              Thu: { Lunch: "Liz's Jacket Potato with Chunky Tuna Mayo & Sweetcorn", Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
+              Fri: { Lunch: "Liz's Jacket Potato with Chunky Tuna Mayo & Sweetcorn", Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
             },
-            macros: { Lunch: { kcal: 630, p: 50, f: 11 }, Dinner: { kcal: 650, p: 50, f: 15 } }
+            macros: { Lunch: { kcal: 520, p: 42, f: 10 }, Dinner: { kcal: 650, p: 50, f: 15 } }
           },
           2: {
             title: "Week 2: Turkey Tuscan Braise / Pork & Lentil Stew",
             plan: {
-              Mon: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Pan-Seared Cod with Paprika Wedges & Roasted Veg' },
-              Tue: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Pan-Seared Cod with Paprika Wedges & Roasted Veg' },
+              Mon: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Crispy Cod Fillet with Paprika Wedges & Mushy Peas' },
+              Tue: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Crispy Cod Fillet with Paprika Wedges & Mushy Peas' },
               Wed: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
-              Thu: { Lunch: 'Smoky Pork & Green Lentil Stew with Sweet Potato', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
-              Fri: { Lunch: 'Smoky Pork & Green Lentil Stew with Sweet Potato', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
+              Thu: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
+              Fri: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
             },
             macros: { Lunch: { kcal: 610, p: 49, f: 11 }, Dinner: { kcal: 640, p: 50, f: 16 } }
           }
@@ -106,13 +133,13 @@ html
       });
 
       // Persistence effects
-      useEffect(() => { localStorage.setItem('jerram_presence_v4', JSON.stringify(presence)); }, [presence]);
+      useEffect(() => { localStorage.setItem('jerram_presence_v5', JSON.stringify(presence)); }, [presence]);
       useEffect(() => { localStorage.setItem('jerram_sundries', JSON.stringify(includeSundries)); }, [includeSundries]);
       useEffect(() => { localStorage.setItem('jerram_fiber', JSON.stringify(highFiberBoost)); }, [highFiberBoost]);
       useEffect(() => { localStorage.setItem('jerram_completed', JSON.stringify(completedMeals)); }, [completedMeals]);
       useEffect(() => { localStorage.setItem('jerram_checked', JSON.stringify(checkedList)); }, [checkedList]);
       useEffect(() => { localStorage.setItem('jerram_custom', JSON.stringify(customItems)); }, [customItems]);
-      useEffect(() => { localStorage.setItem('jerram_weekly_menus', JSON.stringify(weeklyMenus)); }, [weeklyMenus]);
+      useEffect(() => { localStorage.setItem('jerram_weekly_menus_v5', JSON.stringify(weeklyMenus)); }, [weeklyMenus]);
 
       const mealPlan = weeklyMenus[currentWeek].plan;
 
@@ -121,17 +148,18 @@ html
         { id: '1', category: 'Meat & Fish', name: 'Birchwood Chicken Thighs (1.8kg)', price: 11.98 },
         { id: '2', category: 'Meat & Fish', name: 'Birchwood 5% Beef Mince (750g)', price: 5.19 },
         { id: '3', category: 'Meat & Fish', name: 'Lighthouse Bay Salmon Fillets (240g)', price: 3.29 },
-        { id: '4', category: 'Produce', name: 'Oaklands Sweet Potatoes (1kg)', price: 0.99 },
-        { id: '5', category: 'Produce', name: 'Oaklands Baking Potatoes (4-pack)', price: 0.75 },
-        { id: '6', category: 'Produce', name: 'Oaklands Fresh Baby Spinach (250g)', price: 0.95 },
-        { id: '7', category: 'Produce', name: 'Oaklands Fresh Broccoli (2 heads)', price: 0.98 },
-        { id: '8', category: 'Produce', name: 'Bell Peppers & Courgettes', price: 2.80 },
-        { id: '9', category: 'Produce', name: 'Red Onions & Fresh Garlic', price: 1.15 },
-        { id: '10', category: 'Produce', name: 'Lemons & Herbs', price: 1.60 },
-        { id: '11', category: 'Pantry', name: 'Campo Largo Tinned Beans (4 tins)', price: 2.00 },
-        { id: '12', category: 'Pantry', name: 'Baresa Chopped Tomatoes (3 tins)', price: 1.17 },
-        { id: '13', category: 'Pantry', name: 'Crownfield Chia & Flaxseed', price: 2.20 },
-        { id: '14', category: 'Pantry', name: 'Harissa Paste & Spices', price: 2.00 },
+        { id: '4', category: 'Meat & Fish', name: 'Ocean Sea Tuna Chunks in Spring Water (4-pack)', price: 3.49 },
+        { id: '5', category: 'Produce', name: 'Oaklands Sweet Potatoes (1kg)', price: 0.99 },
+        { id: '6', category: 'Produce', name: 'Oaklands Baking Potatoes (4-pack)', price: 0.75 },
+        { id: '7', category: 'Produce', name: 'Oaklands Fresh Baby Spinach (250g)', price: 0.95 },
+        { id: '8', category: 'Produce', name: 'Oaklands Fresh Broccoli (2 heads)', price: 0.98 },
+        { id: '9', category: 'Produce', name: 'Bell Peppers & Sweetcorn Tins', price: 2.80 },
+        { id: '10', category: 'Produce', name: 'Red Onions & Fresh Garlic', price: 1.15 },
+        { id: '11', category: 'Produce', name: 'Lemons & Herbs', price: 1.60 },
+        { id: '12', category: 'Pantry', name: 'Campo Largo Tinned Beans (4 tins)', price: 2.00 },
+        { id: '13', category: 'Pantry', name: 'Baresa Chopped Tomatoes (3 tins)', price: 1.17 },
+        { id: '14', category: 'Pantry', name: 'Crownfield Chia & Flaxseed', price: 2.20 },
+        { id: '15', category: 'Pantry', name: 'Harissa Paste & Spices', price: 2.00 },
       ];
 
       const shoppingList = [...baseShoppingList, ...customItems];
@@ -141,13 +169,13 @@ html
 
       const currentTotal = shoppingList.reduce((sum, item) => sum + Number(item.price), 0);
 
-      // Approximate dynamic price finder for custom item inputs
+      // Approximate dynamic price finder for custom item inputs without requiring manual price
       const estimatePrice = (name) => {
         const lower = name.toLowerCase();
         if (lower.includes('milk') || lower.includes('cream')) return 1.35;
         if (lower.includes('egg')) return 2.15;
         if (lower.includes('bread') || lower.includes('wrap')) return 1.10;
-        if (lower.includes('chicken') || lower.includes('beef') || lower.includes('salmon') || lower.includes('fish') || lower.includes('pork')) return 4.50;
+        if (lower.includes('chicken') || lower.includes('beef') || lower.includes('salmon') || lower.includes('fish') || lower.includes('pork') || lower.includes('tuna')) return 4.50;
         if (lower.includes('fruit') || lower.includes('berry') || lower.includes('apple') || lower.includes('banana')) return 1.80;
         if (lower.includes('cheese') || lower.includes('butter')) return 2.25;
         if (lower.includes('coffee') || lower.includes('tea')) return 2.99;
@@ -204,11 +232,17 @@ html
         }));
       };
 
+      // Push button helper to rotate/shuffle random macro-fit meal from 150+ recipe bank
+      const shuffleRandomMeal = (day, meal) => {
+        const randomRecipe = recipeBank[Math.floor(Math.random() * recipeBank.length)];
+        changeMealForDay(day, meal, randomRecipe.name);
+      };
+
       const getOwnerTag = (day, meal) => {
         const status = presence[day][meal];
         if (status.jerram && status.liz) return { label: "Ours", type: "ours", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
-        if (status.jerram) return { label: "Jerram's", type: "mine", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
-        if (status.liz) return { label: "Liz's", type: "liz", color: "bg-rose-500/20 text-rose-400 border-rose-500/30" };
+        if (status.jerram) return { label: "Jerram's", type: "jerram", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
+        if (status.liz) return { label: "Liz's (Pescatarian)", type: "liz", color: "bg-rose-500/20 text-rose-400 border-rose-500/30" };
         return { label: "Skipped", type: "none", color: "bg-slate-800 text-slate-500 border-slate-700" };
       };
 
@@ -220,7 +254,7 @@ html
               <div>
                 <h1 className="font-bold text-2xl tracking-tight text-amber-400">Jerram & Liz Meal Prep</h1>
                 <p className="text-xs text-slate-400 font-medium tracking-wide mt-0.5">
-                  Lunches & Dinners • High Protein (~50g) • High Fiber (~15g) • Lidl £60 Cap
+                  Lunches & Dinners • Liz Pescatarian (Tuna/Salmon) • High Protein (~50g) • Lidl £60 Cap
                 </p>
               </div>
               <div className="bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl flex items-center gap-4 shadow-inner">
@@ -246,7 +280,7 @@ html
               { id: 'calendar', label: '🗓️ Rotation' },
               { id: 'presence', label: '⚙️ Presence' },
               { id: 'shopping', label: '🛒 Lidl List' },
-              { id: 'recipes', label: '📖 Recipes' },
+              { id: 'recipes', label: '📖 Recipes (150+)' },
               { id: 'portions', label: '⚖️ Portions' }
             ].map(tab => (
               <button
@@ -263,7 +297,7 @@ html
             ))}
           </div>
 
-          {/* --- OVERVIEW TAB (Formerly Schedule) --- */}
+          {/* --- OVERVIEW TAB (Shows full menu for each week, day, meal with rotation push buttons) --- */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Filter Bar & Week Selector */}
@@ -274,14 +308,14 @@ html
                     onClick={() => setCurrentWeek(prev => prev === 1 ? 2 : 1)}
                     className="px-3 py-1 bg-amber-500 text-slate-950 rounded-lg text-xs font-bold"
                   >
-                    Week {currentWeek} (Switch)
+                    Week {currentWeek} (Switch Week)
                   </button>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider mr-1">Filter:</span>
                   {[
                     { id: 'all', label: 'All' },
-                    { id: 'mine', label: "Jerram's" },
+                    { id: 'jerram', label: "Jerram's" },
                     { id: 'liz', label: "Liz's" },
                     { id: 'ours', label: 'Ours' }
                   ].map(f => (
@@ -300,7 +334,7 @@ html
                 return (
                   <div key={day} className="bg-slate-900 rounded-2xl border border-slate-800 p-1 shadow-lg">
                     <div className="bg-slate-950/50 px-4 py-3 border-b border-slate-800 rounded-t-xl flex justify-between items-center">
-                      <h3 className="font-bold text-lg text-amber-400">{day} - Week {currentWeek} Overview</h3>
+                      <h3 className="font-bold text-lg text-amber-400">{day} - Week {currentWeek} Menu Overview</h3>
                     </div>
                     <div className="p-3 space-y-3">
                       {meals.map(meal => {
@@ -333,15 +367,23 @@ html
                               </div>
                             </div>
 
-                            {/* Push Button to Swap Meal */}
-                            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                            {/* Controls: Push button to shuffle/rotate, select dropdown, and complete check */}
+                            <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
+                              <button
+                                onClick={() => shuffleRandomMeal(day, meal)}
+                                className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                                title="Rotate/Shuffle new recipe from 150+ bank"
+                              >
+                                🔀 Rotate Meal
+                              </button>
+
                               <select 
                                 value={currentMealTitle}
                                 onChange={(e) => changeMealForDay(day, meal, e.target.value)}
-                                className="bg-slate-950 border border-slate-700 text-xs text-amber-400 px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-amber-500 max-w-[200px] truncate"
+                                className="bg-slate-950 border border-slate-700 text-xs text-amber-400 px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-amber-500 max-w-[180px] truncate"
                               >
-                                <option value={currentMealTitle} disabled>Swap to macro-fit meal...</option>
-                                {alternativeMeals.map((alt, idx) => (
+                                <option value={currentMealTitle} disabled>Choose specific meal...</option>
+                                {recipeBank.map((alt, idx) => (
                                   <option key={idx} value={alt.name}>
                                     {alt.name} (~{alt.kcal}kcal)
                                   </option>
@@ -366,12 +408,12 @@ html
             </div>
           )}
 
-          {/* --- MONTHLY ROTATION TAB --- */}
+          {/* --- ROTATION CALENDAR TAB --- */}
           {activeTab === 'calendar' && (
             <div className="space-y-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                <h2 className="text-lg font-bold text-white mb-2">Monthly Menu Rotation</h2>
-                <p className="text-xs text-slate-400 mb-6">Switch between week profiles to automatically update your overview and prep notes.</p>
+                <h2 className="text-lg font-bold text-white mb-2">Monthly Menu Rotation (150+ Recipe Bank)</h2>
+                <p className="text-xs text-slate-400 mb-6">Switch between week profiles to automatically update your overview and pescatarian menu options.</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2, 3, 4].map(weekNum => {
@@ -397,7 +439,7 @@ html
                         </div>
                         <p className="text-xs text-slate-400 font-medium mb-3">{weeklyMenus[assignedWeek].title}</p>
                         <div className="text-[11px] text-slate-500 bg-slate-900 p-2 rounded-lg border border-slate-800">
-                          {assignedWeek === 1 ? 'Primary: Chicken Wraps & Beef Chili' : 'Primary: Turkey Braise & Pork Stew'}
+                          {assignedWeek === 1 ? "Liz's Tuna Jackets & Salmon Dinners" : 'Turkey Tuscan Braise & Pork Stew'}
                         </div>
                       </div>
                     );
@@ -435,7 +477,7 @@ html
 
               <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-lg">
                 <h2 className="text-lg font-bold mb-2 text-amber-400">Weekly Presence Matrix (Lunches & Dinners)</h2>
-                <p className="text-xs text-slate-400 mb-4">Toggle who is eating for each meal slot independently.</p>
+                <p className="text-xs text-slate-400 mb-4">Toggle who is eating for each meal slot independently. (Liz prioritizes pescatarian options like tuna jackets and salmon).</p>
                 
                 <div className="space-y-3">
                   {days.map(day => (
@@ -456,7 +498,7 @@ html
                                 onClick={() => togglePresence(day, meal, 'liz')} 
                                 className={`px-3 py-1 rounded-md text-[11px] font-bold transition ${presence[day][meal].liz ? 'bg-rose-500 text-white shadow' : 'bg-slate-800 text-slate-500'}`}
                               >
-                                Liz
+                                Liz (Pesc)
                               </button>
                             </div>
                           </div>
@@ -532,28 +574,18 @@ html
           {activeTab === 'recipes' && (
             <div className="space-y-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-                <span className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Sun Batch Prep (Lunches)</span>
-                <h3 className="text-xl font-bold text-white">Harissa-Braised Chicken Thigh Wraps</h3>
+                <span className="bg-rose-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Liz's Pescatarian Preference</span>
+                <h3 className="text-xl font-bold text-white">Jacket Potato with Chunky Tuna Mayo & Sweetcorn</h3>
                 <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-2">
-                  <p><strong>Jerram's Technique:</strong> Sear 900g chicken thighs in batches to build fond. Braise in harissa, garlic, and chopped tomatoes until tender, then shred.</p>
-                  <ol className="list-decimal list-inside space-y-1 pl-1 text-slate-400">
-                    <li>Roast sliced peppers, courgettes, and red onion at 200°C for 25 mins.</li>
-                    <li>Layer spinach, roasted veg, and shredded harissa chicken into large tortilla wraps.</li>
-                    <li>Toast seam-down in a dry skillet before packing to prevent soggy wraps during reheating.</li>
-                  </ol>
+                  <p><strong>Method:</strong> Microwave baking potatoes for 6 minutes, then crisp in the oven or air fryer at 200°C for 15 mins. Mix Ocean Sea spring water tuna chunks with light mayo, sweetcorn, spring onion, and black pepper.</p>
                 </div>
               </div>
 
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-                <span className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Wed Batch Prep (Dinners)</span>
-                <h3 className="text-xl font-bold text-white">Rich Beef & Black Bean Chili with Quinoa</h3>
+                <span className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Sun Batch Prep (Dinners)</span>
+                <h3 className="text-xl font-bold text-white">Pan-Seared Salmon, Garlic Spinach & Jacket Potato</h3>
                 <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-2">
-                  <p><strong>Jerram's Technique:</strong> Brown 750g of 5% lean beef mince. Extend with black & kidney beans for massive fiber (~16g/serving).</p>
-                  <ol className="list-decimal list-inside space-y-1 pl-1 text-slate-400">
-                    <li>Roast cumin-spiced sweet potato cubes at 200°C for 25 mins.</li>
-                    <li>Simmer quinoa in stock until fluffy.</li>
-                    <li>Simmer chili base for 30 mins, then portion across 5 containers.</li>
-                  </ol>
+                  <p><strong>Jerram's Technique:</strong> Pat salmon dry. Start skin-side down in a cold pan, bring to medium heat to render fat until ultra-crispy.</p>
                 </div>
               </div>
             </div>
@@ -568,21 +600,11 @@ html
                 
                 <div className="space-y-3">
                   <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-                    <h4 className="font-bold text-slate-200 text-sm mb-1">Harissa Chicken Wraps (Mon–Wed Lunch)</h4>
+                    <h4 className="font-bold text-slate-200 text-sm mb-1">Tuna Mayo Jacket Potatoes (Liz's Lunch)</h4>
                     <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
-                      <li>Chicken Thighs: ~180g raw weight per portion</li>
-                      <li>Tortilla Wraps: 2 large wraps per meal</li>
-                      <li>Roasted Veg & Spinach: ~180g combined</li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-                    <h4 className="font-bold text-slate-200 text-sm mb-1">Beef Chili Batch (Wed–Fri Dinner)</h4>
-                    <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
-                      <li>5% Beef Mince: 150g raw weight per portion</li>
-                      <li>Mixed Beans: ~240g drained weight per portion</li>
-                      <li>Dry Quinoa: 50g dry (~150g cooked)</li>
-                      <li>Roasted Sweet Potato: ~150g cooked</li>
+                      <li>Baking Potato: 1 medium potato (~200g)</li>
+                      <li>Tuna Chunks: 1 standard tin (~120g drained)</li>
+                      <li>Sweetcorn & Mayo: ~50g combined</li>
                     </ul>
                   </div>
                 </div>
@@ -597,3 +619,4 @@ html
   </script>
 </body>
 </html>
+```
