@@ -1,10 +1,10 @@
-```html
+html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chef & Liz Meal Prep</title>
+  <title>Jerram & Liz Meal Prep & Shopping</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,20 +17,24 @@
     const { useState, useEffect } = React;
 
     function App() {
-      const [activeTab, setActiveTab] = useState('schedule');
+      const [activeTab, setActiveTab] = useState('overview');
       const [currentWeek, setCurrentWeek] = useState(1);
       const [filterOwner, setFilterOwner] = useState('all'); // 'all', 'mine', 'liz', 'ours'
 
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+      const meals = ['Lunch', 'Dinner'];
 
-      // Initial presence matrix for Jerram and Liz
+      // Initial presence matrix for Jerram and Liz (both Lunches and Dinners)
       const initialPresence = days.reduce((acc, day) => {
-        acc[day] = { Dinner: { chef: true, liz: true } };
+        acc[day] = {
+          Lunch: { jerram: true, liz: true },
+          Dinner: { jerram: true, liz: true }
+        };
         return acc;
       }, {});
 
       const [presence, setPresence] = useState(() => {
-        const saved = localStorage.getItem('jerram_presence');
+        const saved = localStorage.getItem('jerram_presence_v4');
         return saved ? JSON.parse(saved) : initialPresence;
       });
 
@@ -60,41 +64,55 @@
       });
 
       const [newItemName, setNewItemName] = useState('');
-      const [newItemPrice, setNewItemPrice] = useState('');
+
+      // Macro-compliant alternative meal bank for custom swapping
+      const alternativeMeals = [
+        { name: 'Harissa-Braised Chicken Thigh Wraps', kcal: 630, p: 50, f: 11, category: 'Lunch' },
+        { name: 'Rich Beef & Black Bean Chili with Quinoa', kcal: 650, p: 52, f: 16, category: 'Dinner' },
+        { name: 'Turkey & White Bean Tuscan Braise with Brown Rice', kcal: 610, p: 49, f: 11, category: 'Lunch' },
+        { name: 'Smoky Pork & Green Lentil Stew with Sweet Potato', kcal: 640, p: 50, f: 15, category: 'Dinner' },
+        { name: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato', kcal: 680, p: 46, f: 12, category: 'Dinner' },
+        { name: 'Grilled Lemon Herb Chicken Breast & Wild Rice Bowl', kcal: 590, p: 54, f: 10, category: 'Lunch' },
+        { name: 'Lean Beef & Roasted Mediterranean Vegetable Moussaka', kcal: 660, p: 48, f: 14, category: 'Dinner' }
+      ];
+
+      // Weekly Menu Rotations State
+      const [weeklyMenus, setWeeklyMenus] = useState(() => {
+        const saved = localStorage.getItem('jerram_weekly_menus');
+        return saved ? JSON.parse(saved) : {
+          1: {
+            title: "Week 1: Salmon & Harissa Wraps / Beef Chili",
+            plan: {
+              Mon: { Lunch: 'Harissa-Braised Chicken Thigh Wraps', Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
+              Tue: { Lunch: 'Harissa-Braised Chicken Thigh Wraps', Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
+              Wed: { Lunch: 'Harissa-Braised Chicken Thigh Wraps', Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
+              Thu: { Lunch: 'Rich Beef & Black Bean Chili with Quinoa', Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
+              Fri: { Lunch: 'Rich Beef & Black Bean Chili with Quinoa', Dinner: 'Rich Beef & Black Bean Chili with Quinoa' },
+            },
+            macros: { Lunch: { kcal: 630, p: 50, f: 11 }, Dinner: { kcal: 650, p: 50, f: 15 } }
+          },
+          2: {
+            title: "Week 2: Turkey Tuscan Braise / Pork & Lentil Stew",
+            plan: {
+              Mon: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Pan-Seared Cod with Paprika Wedges & Roasted Veg' },
+              Tue: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Pan-Seared Cod with Paprika Wedges & Roasted Veg' },
+              Wed: { Lunch: 'Turkey & White Bean Tuscan Braise with Brown Rice', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
+              Thu: { Lunch: 'Smoky Pork & Green Lentil Stew with Sweet Potato', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
+              Fri: { Lunch: 'Smoky Pork & Green Lentil Stew with Sweet Potato', Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
+            },
+            macros: { Lunch: { kcal: 610, p: 49, f: 11 }, Dinner: { kcal: 640, p: 50, f: 16 } }
+          }
+        };
+      });
 
       // Persistence effects
-      useEffect(() => { localStorage.setItem('jerram_presence', JSON.stringify(presence)); }, [presence]);
+      useEffect(() => { localStorage.setItem('jerram_presence_v4', JSON.stringify(presence)); }, [presence]);
       useEffect(() => { localStorage.setItem('jerram_sundries', JSON.stringify(includeSundries)); }, [includeSundries]);
       useEffect(() => { localStorage.setItem('jerram_fiber', JSON.stringify(highFiberBoost)); }, [highFiberBoost]);
       useEffect(() => { localStorage.setItem('jerram_completed', JSON.stringify(completedMeals)); }, [completedMeals]);
       useEffect(() => { localStorage.setItem('jerram_checked', JSON.stringify(checkedList)); }, [checkedList]);
       useEffect(() => { localStorage.setItem('jerram_custom', JSON.stringify(customItems)); }, [customItems]);
-
-      // Two Weekly Menu Rotations (Dinners Only - Jerram & Liz)
-      const weeklyMenus = {
-        1: {
-          title: "Week 1: Salmon & Beef Chili",
-          plan: {
-            Mon: { Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
-            Tue: { Dinner: 'Pan-Seared Salmon, Garlic Spinach & Jacket Potato' },
-            Wed: { Dinner: 'Rich Beef & Black Bean Chili with Quinoa & Sweet Potato' },
-            Thu: { Dinner: 'Rich Beef & Black Bean Chili with Quinoa & Sweet Potato' },
-            Fri: { Dinner: 'Rich Beef & Black Bean Chili with Quinoa & Sweet Potato' },
-          },
-          macros: { kcal: 680, p: 50, f: 15 }
-        },
-        2: {
-          title: "Week 2: Cod & Pork Stew",
-          plan: {
-            Mon: { Dinner: 'Pan-Seared Cod with Paprika Wedges & Roasted Veg' },
-            Tue: { Dinner: 'Pan-Seared Cod with Paprika Wedges & Roasted Veg' },
-            Wed: { Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
-            Thu: { Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
-            Fri: { Dinner: 'Smoky Pork & Green Lentil Stew with Sweet Potato' },
-          },
-          macros: { kcal: 650, p: 48, f: 16 }
-        }
-      };
+      useEffect(() => { localStorage.setItem('jerram_weekly_menus', JSON.stringify(weeklyMenus)); }, [weeklyMenus]);
 
       const mealPlan = weeklyMenus[currentWeek].plan;
 
@@ -123,6 +141,31 @@
 
       const currentTotal = shoppingList.reduce((sum, item) => sum + Number(item.price), 0);
 
+      // Approximate dynamic price finder for custom item inputs
+      const estimatePrice = (name) => {
+        const lower = name.toLowerCase();
+        if (lower.includes('milk') || lower.includes('cream')) return 1.35;
+        if (lower.includes('egg')) return 2.15;
+        if (lower.includes('bread') || lower.includes('wrap')) return 1.10;
+        if (lower.includes('chicken') || lower.includes('beef') || lower.includes('salmon') || lower.includes('fish') || lower.includes('pork')) return 4.50;
+        if (lower.includes('fruit') || lower.includes('berry') || lower.includes('apple') || lower.includes('banana')) return 1.80;
+        if (lower.includes('cheese') || lower.includes('butter')) return 2.25;
+        if (lower.includes('coffee') || lower.includes('tea')) return 2.99;
+        if (lower.includes('snack') || lower.includes('crisp') || lower.includes('chocolate')) return 1.25;
+        return 1.50;
+      };
+
+      const addCustomItem = (e) => {
+        e.preventDefault();
+        if (!newItemName.trim()) return;
+        const estimated = estimatePrice(newItemName);
+        setCustomItems(prev => [
+          ...prev, 
+          { id: 'custom-' + Date.now(), category: 'Custom Items', name: newItemName.trim(), price: estimated }
+        ]);
+        setNewItemName('');
+      };
+
       const toggleMealComplete = (day, meal) => {
         const key = `${currentWeek}-${day}-${meal}`;
         setCompletedMeals(prev => ({ ...prev, [key]: !prev[key] }));
@@ -145,21 +188,26 @@
         setCheckedList(prev => ({ ...prev, [id]: !prev[id] }));
       };
 
-      const addCustomItem = (e) => {
-        e.preventDefault();
-        if (!newItemName || !newItemPrice) return;
-        setCustomItems(prev => [
-          ...prev, 
-          { id: 'custom-' + Date.now(), category: 'Custom Items', name: newItemName, price: parseFloat(newItemPrice) }
-        ]);
-        setNewItemName('');
-        setNewItemPrice('');
+      const changeMealForDay = (day, meal, newMealName) => {
+        setWeeklyMenus(prev => ({
+          ...prev,
+          [currentWeek]: {
+            ...prev[currentWeek],
+            plan: {
+              ...prev[currentWeek].plan,
+              [day]: {
+                ...prev[currentWeek].plan[day],
+                [meal]: newMealName
+              }
+            }
+          }
+        }));
       };
 
       const getOwnerTag = (day, meal) => {
         const status = presence[day][meal];
-        if (status.chef && status.liz) return { label: "Ours", type: "ours", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
-        if (status.chef) return { label: "Jerram's", type: "mine", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
+        if (status.jerram && status.liz) return { label: "Ours", type: "ours", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" };
+        if (status.jerram) return { label: "Jerram's", type: "mine", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" };
         if (status.liz) return { label: "Liz's", type: "liz", color: "bg-rose-500/20 text-rose-400 border-rose-500/30" };
         return { label: "Skipped", type: "none", color: "bg-slate-800 text-slate-500 border-slate-700" };
       };
@@ -172,7 +220,7 @@
               <div>
                 <h1 className="font-bold text-2xl tracking-tight text-amber-400">Jerram & Liz Meal Prep</h1>
                 <p className="text-xs text-slate-400 font-medium tracking-wide mt-0.5">
-                  Dinners Only • High Protein (~50g) • High Fiber (~16g) • Lidl £60 Cap
+                  Lunches & Dinners • High Protein (~50g) • High Fiber (~15g) • Lidl £60 Cap
                 </p>
               </div>
               <div className="bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl flex items-center gap-4 shadow-inner">
@@ -185,7 +233,7 @@
                 <div className="h-8 w-[1px] bg-slate-800"></div>
                 <div>
                   <span className="text-[10px] uppercase font-bold text-slate-500 block">Active Plan</span>
-                  <span className="text-sm font-bold text-amber-400">{weeklyMenus[currentWeek].title.split(':')[0]}</span>
+                  <span className="text-sm font-bold text-amber-400">Week {currentWeek}</span>
                 </div>
               </div>
             </div>
@@ -194,7 +242,7 @@
           {/* Navigation Tabs */}
           <div className="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 mb-8 overflow-x-auto shadow-inner">
             {[
-              { id: 'schedule', label: '📅 Schedule' },
+              { id: 'overview', label: '📅 Overview' },
               { id: 'calendar', label: '🗓️ Rotation' },
               { id: 'presence', label: '⚙️ Presence' },
               { id: 'shopping', label: '🛒 Lidl List' },
@@ -215,13 +263,22 @@
             ))}
           </div>
 
-          {/* --- SCHEDULE TAB --- */}
-          {activeTab === 'schedule' && (
+          {/* --- OVERVIEW TAB (Formerly Schedule) --- */}
+          {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Filter Bar */}
-              <div className="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Filter Attendance:</span>
-                <div className="flex gap-1.5">
+              {/* Filter Bar & Week Selector */}
+              <div className="flex flex-col sm:flex-row items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800 gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Week:</span>
+                  <button 
+                    onClick={() => setCurrentWeek(prev => prev === 1 ? 2 : 1)}
+                    className="px-3 py-1 bg-amber-500 text-slate-950 rounded-lg text-xs font-bold"
+                  >
+                    Week {currentWeek} (Switch)
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider mr-1">Filter:</span>
                   {[
                     { id: 'all', label: 'All' },
                     { id: 'mine', label: "Jerram's" },
@@ -240,41 +297,68 @@
               </div>
 
               {days.map(day => {
-                const tag = getOwnerTag(day, 'Dinner');
-                if (filterOwner !== 'all' && tag.type !== filterOwner) return null;
-
-                const isCompleted = completedMeals[`${currentWeek}-${day}-Dinner`];
-                const macros = weeklyMenus[currentWeek].macros;
-
                 return (
                   <div key={day} className="bg-slate-900 rounded-2xl border border-slate-800 p-1 shadow-lg">
                     <div className="bg-slate-950/50 px-4 py-3 border-b border-slate-800 rounded-t-xl flex justify-between items-center">
-                      <h3 className="font-bold text-lg text-amber-400">{day}</h3>
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${tag.color}`}>
-                        {tag.label}
-                      </span>
+                      <h3 className="font-bold text-lg text-amber-400">{day} - Week {currentWeek} Overview</h3>
                     </div>
-                    <div className="p-3">
-                      <div 
-                        onClick={() => toggleMealComplete(day, 'Dinner')}
-                        className={`flex items-center p-3 rounded-xl border transition-all cursor-pointer ${isCompleted ? 'bg-slate-800/30 border-slate-800 opacity-50' : 'bg-slate-800/80 border-slate-700 hover:border-slate-600'}`}
-                      >
-                        <div className="flex-1 flex flex-col gap-1.5">
-                          <span className={`font-semibold text-base ${isCompleted ? 'line-through text-slate-500' : 'text-slate-100'}`}>
-                            {mealPlan[day]['Dinner']}
-                          </span>
-                          <div className="flex gap-4 text-xs text-slate-400 font-medium">
-                            <span>🔥 ~{macros.kcal} kcal</span>
-                            <span>🥩 ~{macros.p}g Protein</span>
-                            <span>🌾 ~{macros.f}g Fiber</span>
+                    <div className="p-3 space-y-3">
+                      {meals.map(meal => {
+                        const tag = getOwnerTag(day, meal);
+                        if (filterOwner !== 'all' && tag.type !== filterOwner) return null;
+
+                        const isCompleted = completedMeals[`${currentWeek}-${day}-${meal}`];
+                        const macros = weeklyMenus[currentWeek].macros[meal];
+                        const currentMealTitle = mealPlan[day][meal];
+
+                        return (
+                          <div 
+                            key={meal}
+                            className={`flex flex-col md:flex-row items-start md:items-center justify-between p-3.5 rounded-xl border transition-all gap-3 ${isCompleted ? 'bg-slate-800/30 border-slate-800 opacity-50' : 'bg-slate-800/80 border-slate-700'}`}
+                          >
+                            <div className="flex-1 flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{meal}</span>
+                                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${tag.color}`}>
+                                  {tag.label}
+                                </span>
+                              </div>
+                              <span className={`font-semibold text-base ${isCompleted ? 'line-through text-slate-500' : 'text-slate-100'}`}>
+                                {currentMealTitle}
+                              </span>
+                              <div className="flex gap-4 text-xs text-slate-400 font-medium">
+                                <span>🔥 ~{macros.kcal} kcal</span>
+                                <span>🥩 ~{macros.p}g Protein</span>
+                                <span>🌾 ~{macros.f}g Fiber</span>
+                              </div>
+                            </div>
+
+                            {/* Push Button to Swap Meal */}
+                            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                              <select 
+                                value={currentMealTitle}
+                                onChange={(e) => changeMealForDay(day, meal, e.target.value)}
+                                className="bg-slate-950 border border-slate-700 text-xs text-amber-400 px-2.5 py-1.5 rounded-lg focus:outline-none focus:border-amber-500 max-w-[200px] truncate"
+                              >
+                                <option value={currentMealTitle} disabled>Swap to macro-fit meal...</option>
+                                {alternativeMeals.map((alt, idx) => (
+                                  <option key={idx} value={alt.name}>
+                                    {alt.name} (~{alt.kcal}kcal)
+                                  </option>
+                                ))}
+                              </select>
+
+                              <button
+                                onClick={() => toggleMealComplete(day, meal)}
+                                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-600 bg-slate-900'}`}
+                                title="Toggle Complete"
+                              >
+                                {isCompleted && '✓'}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="pl-3">
-                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-bold' : 'border-slate-600'}`}>
-                            {isCompleted && '✓'}
-                          </div>
-                        </div>
-                      </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -287,7 +371,7 @@
             <div className="space-y-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
                 <h2 className="text-lg font-bold text-white mb-2">Monthly Menu Rotation</h2>
-                <p className="text-xs text-slate-400 mb-6">Switch between week profiles to automatically update your schedule and prep notes.</p>
+                <p className="text-xs text-slate-400 mb-6">Switch between week profiles to automatically update your overview and prep notes.</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2, 3, 4].map(weekNum => {
@@ -299,7 +383,7 @@
                         key={`week-${weekNum}`} 
                         onClick={() => {
                           setCurrentWeek(assignedWeek);
-                          setActiveTab('schedule');
+                          setActiveTab('overview');
                         }}
                         className={`p-4 rounded-xl border cursor-pointer transition-all ${isCurrent ? 'bg-amber-500/10 border-amber-500/50 shadow-md' : 'bg-slate-950/50 border-slate-800 hover:border-slate-600'}`}
                       >
@@ -313,7 +397,7 @@
                         </div>
                         <p className="text-xs text-slate-400 font-medium mb-3">{weeklyMenus[assignedWeek].title}</p>
                         <div className="text-[11px] text-slate-500 bg-slate-900 p-2 rounded-lg border border-slate-800">
-                          {assignedWeek === 1 ? 'Primary: Salmon & Lean Beef Chili' : 'Primary: Cod & Smoky Pork Stew'}
+                          {assignedWeek === 1 ? 'Primary: Chicken Wraps & Beef Chili' : 'Primary: Turkey Braise & Pork Stew'}
                         </div>
                       </div>
                     );
@@ -334,7 +418,7 @@
                   <label className="flex items-center justify-between cursor-pointer bg-slate-950/50 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition">
                     <div className="flex flex-col">
                       <span className="font-semibold text-slate-200 text-sm">Baresa Sun-Dried Tomatoes in Herb Oil</span>
-                      <span className="text-xs text-slate-500">Adds rich umami depth to braises (£1.45 at Lidl)</span>
+                      <span className="text-xs text-slate-500">Adds rich umami depth (£1.45 at Lidl)</span>
                     </div>
                     <input type="checkbox" checked={includeSundries} onChange={() => setIncludeSundries(!includeSundries)} className="w-5 h-5 accent-amber-500 rounded" />
                   </label>
@@ -350,26 +434,33 @@
               </div>
 
               <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-lg">
-                <h2 className="text-lg font-bold mb-2 text-amber-400">Weekly Presence Matrix</h2>
-                <p className="text-xs text-slate-400 mb-4">Toggle who is eating dinner at home each night.</p>
+                <h2 className="text-lg font-bold mb-2 text-amber-400">Weekly Presence Matrix (Lunches & Dinners)</h2>
+                <p className="text-xs text-slate-400 mb-4">Toggle who is eating for each meal slot independently.</p>
                 
                 <div className="space-y-3">
                   {days.map(day => (
-                    <div key={day} className="flex justify-between items-center bg-slate-950/50 rounded-xl p-3.5 border border-slate-800">
-                      <span className="font-bold text-slate-200 text-sm uppercase">{day} Dinner</span>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => togglePresence(day, 'Dinner', 'chef')} 
-                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${presence[day]['Dinner'].chef ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-800 text-slate-500'}`}
-                        >
-                          Jerram
-                        </button>
-                        <button 
-                          onClick={() => togglePresence(day, 'Dinner', 'liz')} 
-                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${presence[day]['Dinner'].liz ? 'bg-rose-500 text-white shadow' : 'bg-slate-800 text-slate-500'}`}
-                        >
-                          Liz
-                        </button>
+                    <div key={day} className="bg-slate-950/50 rounded-xl p-3.5 border border-slate-800 space-y-3">
+                      <span className="font-bold text-slate-200 text-sm uppercase block border-b border-slate-800/80 pb-1.5">{day}</span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {meals.map(meal => (
+                          <div key={meal} className="flex justify-between items-center bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+                            <span className="text-xs font-semibold text-slate-400">{meal}</span>
+                            <div className="flex gap-1.5">
+                              <button 
+                                onClick={() => togglePresence(day, meal, 'jerram')} 
+                                className={`px-3 py-1 rounded-md text-[11px] font-bold transition ${presence[day][meal].jerram ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-800 text-slate-500'}`}
+                              >
+                                Jerram
+                              </button>
+                              <button 
+                                onClick={() => togglePresence(day, meal, 'liz')} 
+                                className={`px-3 py-1 rounded-md text-[11px] font-bold transition ${presence[day][meal].liz ? 'bg-rose-500 text-white shadow' : 'bg-slate-800 text-slate-500'}`}
+                              >
+                                Liz
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -396,25 +487,17 @@
                 </div>
               </div>
 
-              {/* Add Custom Item Form */}
+              {/* Add Custom Item Form (Auto estimated price) */}
               <form onSubmit={addCustomItem} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex gap-2 shadow-md">
                 <input 
                   type="text" 
-                  placeholder="Add item name..." 
+                  placeholder="Add item name (approx price auto-calculated)..." 
                   value={newItemName} 
                   onChange={e => setNewItemName(e.target.value)} 
                   className="flex-1 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-amber-500"
                 />
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  placeholder="£ Price" 
-                  value={newItemPrice} 
-                  onChange={e => setNewItemPrice(e.target.value)} 
-                  className="w-24 bg-slate-950 border border-slate-800 px-3 py-2 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-amber-500"
-                />
-                <button type="submit" className="bg-amber-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-400 transition">
-                  Add
+                <button type="submit" className="bg-amber-500 text-slate-950 px-5 py-2 rounded-xl text-xs font-bold hover:bg-amber-400 transition">
+                  Add Item
                 </button>
               </form>
               
@@ -449,27 +532,27 @@
           {activeTab === 'recipes' && (
             <div className="space-y-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-                <span className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Mon & Tue Fresh Cook</span>
-                <h3 className="text-xl font-bold text-white">Pan-Seared Salmon with Garlic Spinach & Jacket Potato</h3>
+                <span className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Sun Batch Prep (Lunches)</span>
+                <h3 className="text-xl font-bold text-white">Harissa-Braised Chicken Thigh Wraps</h3>
                 <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-2">
-                  <p><strong>Jerram's Technique:</strong> Pat salmon dry with kitchen paper to ensure maximum skin crispiness. Start skin-side down in a cold pan with a touch of oil, bringing up to medium heat slowly to render fat.</p>
+                  <p><strong>Jerram's Technique:</strong> Sear 900g chicken thighs in batches to build fond. Braise in harissa, garlic, and chopped tomatoes until tender, then shred.</p>
                   <ol className="list-decimal list-inside space-y-1 pl-1 text-slate-400">
-                    <li>Microwave baking potatoes for 6 minutes, then crisp skin in oven or air fryer at 200°C for 15 mins.</li>
-                    <li>Sear salmon 3-4 mins skin-side down until golden and crisp; flip for 1 minute.</li>
-                    <li>Wilt fresh baby spinach and steam broccoli in the pan juices, finishing with fresh lemon juice and sea salt.</li>
+                    <li>Roast sliced peppers, courgettes, and red onion at 200°C for 25 mins.</li>
+                    <li>Layer spinach, roasted veg, and shredded harissa chicken into large tortilla wraps.</li>
+                    <li>Toast seam-down in a dry skillet before packing to prevent soggy wraps during reheating.</li>
                   </ol>
                 </div>
               </div>
 
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-                <span className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Wed Batch Prep</span>
-                <h3 className="text-xl font-bold text-white">Rich Beef, Black Bean & Quinoa Chili (Week 1)</h3>
+                <span className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block">Wed Batch Prep (Dinners)</span>
+                <h3 className="text-xl font-bold text-white">Rich Beef & Black Bean Chili with Quinoa</h3>
                 <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed space-y-2">
-                  <p><strong>Jerram's Technique:</strong> Aggressively brown 750g of 5% lean beef mince to build foundational fond, then extend with black/kidney beans for a massive fiber hit (~16g per serving).</p>
+                  <p><strong>Jerram's Technique:</strong> Brown 750g of 5% lean beef mince. Extend with black & kidney beans for massive fiber (~16g/serving).</p>
                   <ol className="list-decimal list-inside space-y-1 pl-1 text-slate-400">
-                    <li>Roast cumin-spiced sweet potato cubes at 200°C for 25 minutes.</li>
+                    <li>Roast cumin-spiced sweet potato cubes at 200°C for 25 mins.</li>
                     <li>Simmer quinoa in stock until fluffy.</li>
-                    <li>Build chili in a Dutch oven with mince, tomatoes, spices, and drained pulses. Simmer 30 mins to thicken. Portion into 5 containers.</li>
+                    <li>Simmer chili base for 30 mins, then portion across 5 containers.</li>
                   </ol>
                 </div>
               </div>
@@ -481,20 +564,20 @@
             <div className="space-y-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
                 <h2 className="text-lg font-bold text-amber-400">Kitchen Scale Portion Breakdown</h2>
-                <p className="text-xs text-slate-400">Exact weights per container to ensure precision when packing your evening meals:</p>
+                <p className="text-xs text-slate-400">Exact weights per container to ensure precision when packing your meals:</p>
                 
                 <div className="space-y-3">
                   <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-                    <h4 className="font-bold text-slate-200 text-sm mb-1">Salmon Dinner (Mon & Tue)</h4>
+                    <h4 className="font-bold text-slate-200 text-sm mb-1">Harissa Chicken Wraps (Mon–Wed Lunch)</h4>
                     <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
-                      <li>Salmon Fillet: ~120g raw</li>
-                      <li>Jacket Potato: ~200g–220g raw</li>
-                      <li>Spinach & Broccoli: ~175g combined</li>
+                      <li>Chicken Thighs: ~180g raw weight per portion</li>
+                      <li>Tortilla Wraps: 2 large wraps per meal</li>
+                      <li>Roasted Veg & Spinach: ~180g combined</li>
                     </ul>
                   </div>
 
                   <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-                    <h4 className="font-bold text-slate-200 text-sm mb-1">Beef Chili Batch (Wed–Fri)</h4>
+                    <h4 className="font-bold text-slate-200 text-sm mb-1">Beef Chili Batch (Wed–Fri Dinner)</h4>
                     <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
                       <li>5% Beef Mince: 150g raw weight per portion</li>
                       <li>Mixed Beans: ~240g drained weight per portion</li>
@@ -514,4 +597,3 @@
   </script>
 </body>
 </html>
-```
